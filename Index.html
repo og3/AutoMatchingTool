@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>人材登録フォーム | 自動マッチングツール</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+  <!-- UAフォールバック：スマホUAなら強制1カラム用クラスを付与 -->
+  <script>
+    (function(){
+      try {
+        var ua = navigator.userAgent || "";
+        if (/(Mobi|Android|iPhone|iPad|iPod)/i.test(ua)) {
+          document.documentElement.classList.add('ua-mobile');
+        }
+      } catch(e) {}
+    })();
+  </script>
+
+  <style>
+    :root {
+      --accent: #6200ee;
+      --accent-ink: #fff;
+      --bg: #f6f6fb;
+      --card: #fff;
+      --ink: #1f1f1f;
+      --muted: #6b7280;
+      --radius: 16px;
+      --chip-bg: #eef2ff;
+      --chip-ink: #1f1f1f;
+      --chip-x: #6b7280;
+      --focus: rgba(98,0,238,.18);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+
+    /* === PC（元サイズ） === */
+    body {
+      margin: 0; padding: 16px;
+      background: var(--bg); color: var(--ink);
+      font: 16px/1.7 system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP", "Yu Gothic", "Meiryo", sans-serif;
+      -webkit-text-size-adjust: 100%;
+      touch-action: manipulation;
+    }
+    .container { width: 100%; max-width: 880px; margin: 0 auto; }
+
+    .hero {
+      background: linear-gradient(135deg, var(--accent), #7b66ff);
+      color: var(--accent-ink);
+      padding: 16px; border-radius: var(--radius);
+      box-shadow: 0 10px 24px rgba(0,0,0,.12);
+      margin-bottom: 12px;
+    }
+    .hero h1 { margin: 0 0 6px; font-size: 22px; font-weight: 700; }
+    .hero p { margin: 0; opacity: .95; font-size: 14px; }
+
+    form {
+      background: var(--card); border-radius: var(--radius);
+      box-shadow: 0 6px 18px rgba(0,0,0,.08);
+      padding: 8px 0 6px;
+    }
+    .section { padding: 18px; border-top: 1px solid #ececf5; }
+    .section:first-child { border-top: 0; }
+    .section h2 { margin: 0 0 12px; font-size: 18px; font-weight: 800; }
+
+    /* レイアウト：モバイル1カラム → 640px以上は12カラム */
+    .grid { display: grid; gap: 14px; grid-template-columns: 1fr; }
+    .col-4, .col-6, .col-8, .col-12 { grid-column: 1 / -1; }
+    @media only screen and (min-width: 640px) {
+      body { padding: 24px; }
+      .section { padding: 20px 24px; }
+      .grid { gap: 16px; grid-template-columns: repeat(12, 1fr); }
+      .col-4 { grid-column: span 4; }
+      .col-6 { grid-column: span 6; }
+      .col-8 { grid-column: span 8; }
+      .col-12 { grid-column: span 12; }
+    }
+
+    label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 16px; }
+    .req::after { content: " *"; color: #d32f2f; font-weight: 800; }
+
+    input[type="text"], input[type="email"], input[type="tel"],
+    input[type="date"], input[type="number"], select, textarea {
+      width: 100%;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 16px;
+      line-height: 1.4;
+      background: #fff;
+      transition: border-color .15s, box-shadow .15s;
+      min-height: 48px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none; border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--focus);
+    }
+    ::placeholder { color: #9ca3af; opacity: 1; }
+
+    /* Chip */
+    .chip-wrap { display: grid; gap: 8px; }
+    .chipset { display: flex; flex-wrap: wrap; gap: 8px; padding: 4px 0 0; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 12px; border-radius: 999px;
+      background: var(--chip-bg); color: var(--chip-ink);
+      border: 1px solid #dbeafe; font-size: 15px;
+    }
+    .chip button {
+      appearance: none; border: 0; background: transparent;
+      cursor: pointer; font-size: 18px; line-height: 1; color: var(--chip-x);
+      padding: 0 2px 0 0;
+    }
+
+    .actions { padding: 14px 18px 18px; display: flex; gap: 12px; flex-wrap: wrap; }
+    button {
+      border: 0; border-radius: 999px; padding: 14px 20px; font-weight: 800;
+      cursor: pointer; font-size: 16px; min-height: 52px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-primary { background: var(--accent); color: var(--accent-ink); }
+    .btn-ghost { background: transparent; color: var(--accent); border: 2px solid var(--accent); }
+    .btn-primary, .btn-ghost { flex: 1 1 100%; }
+    @media (min-width: 640px) { .btn-primary, .btn-ghost { flex: 0 0 auto; } }
+
+    .toast {
+      position: fixed; left: 50%; bottom: 16px; transform: translate(-50%, 8px);
+      background: #111827; color: #fff; padding: 12px 16px;
+      border-radius: 10px; opacity: 0; transition: .2s ease;
+      max-width: calc(100vw - 32px); text-align: center; font-size: 15px;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    /* === DOB 切替の既定値（PC想定） === */
+    .mobile-only { display: none; }
+    .desktop-only { display: block; }
+
+    /* === スマホ専用：サイズ1.5倍 & DOBをテキストへ === */
+    @media (max-width: 639.98px) {
+      body { font-size: 28px; }
+      .hero { padding: 20px; }
+      .hero h1 { font-size: 33px; }
+      .hero p { font-size: 22px; }
+
+      .section { padding: 20px; }
+      .section h2 { font-size: 30px; }
+
+      label { font-size: 26px; margin-bottom: 12px; }
+
+      input[type="text"], input[type="email"], input[type="tel"],
+      input[type="number"], select, textarea {
+        font-size: 27px;
+        min-height: 84px;
+        padding: 21px;
+        border-radius: 16px;
+      }
+
+      .mobile-only { display: block; }
+      .desktop-only { display: none; }
+      #dobText { font-size: 27px; min-height: 84px; padding: 21px; }
+
+      small.helper, .chip-note { font-size: 20px; }
+
+      .chipset { gap: 12px; }
+      .chip {
+        font-size: 25px;
+        padding: 16px 20px;
+        border-width: 2px;
+        gap: 14px;
+      }
+      .chip button { font-size: 28px; }
+
+      button {
+        font-size: 27px;
+        min-height: 84px;
+        padding: 20px 24px;
+        border-width: 3px;
+      }
+      .toast { font-size: 20px; padding: 14px 18px; }
+    }
+
+    /* === UAフォールバック：スマホUAは常に1カラム === */
+    .ua-mobile .grid { grid-template-columns: 1fr !important; }
+    .ua-mobile .col-4, .ua-mobile .col-6, .ua-mobile .col-8, .ua-mobile .col-12 { grid-column: 1 / -1 !important; }
+    .ua-mobile .btn-primary, .ua-mobile .btn-ghost { flex: 1 1 100% !important; }
+
+    /* === サンクス画面（Index内に内蔵） === */
+    #thanksPage { display:none; }
+    #thanksPage .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 24px rgba(0,0,0,.1);
+      padding: 24px;
+      text-align: center;
+    }
+    #thanksPage h2 { margin: 0 0 8px; font-size: 22px; }
+    #thanksPage p  { margin: 0 0 16px; color: var(--muted); }
+    #thanksPage .big { font-size: 44px; line-height: 1.1; }
+    @media (max-width: 639.98px) {
+      #thanksPage h2 { font-size: 30px; }
+      #thanksPage p  { font-size: 22px; }
+      #thanksPage .big { font-size: 54px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="mainPage">
+    <div class="container">
+      <div class="hero">
+        <h1>人材登録フォーム</h1>
+        <p>※の項目は必ずご入力ください。</p>
+      </div>
+
+      <form id="entryForm" onsubmit="handleSubmit(event)">
+        <!-- 基本情報 -->
+        <div class="section">
+          <h2>基本情報</h2>
+          <div class="grid">
+            <div class="col-6">
+              <label class="req">氏名</label>
+              <input type="text" name="name" required autocomplete="name" placeholder="山田 太郎" inputmode="text">
+            </div>
+
+            <div class="col-6">
+              <label class="req">生年月日（西暦）</label>
+              <input id="dobDate" class="desktop-only" type="date" placeholder="1990-04-01">
+              <input id="dobText" class="mobile-only" type="text" inputmode="numeric" placeholder="1990-04-01" aria-label="生年月日（YYYY-MM-DD）">
+            </div>
+
+            <div class="col-6">
+              <label class="req">メールアドレス</label>
+              <input type="email" name="email" required autocomplete="email" placeholder="example@example.com" inputmode="email">
+            </div>
+            <div class="col-6">
+              <label class="req">TEL</label>
+              <input type="tel" name="tel" required autocomplete="tel" placeholder="090-1234-5678" inputmode="tel">
+            </div>
+          </div>
+        </div>
+
+        <!-- 希望条件 -->
+        <div class="section">
+          <h2>希望条件</h2>
+          <div class="grid">
+            <div class="col-4">
+              <label class="req">ワークスタイル</label>
+              <select name="workstyle" required>
+                <option value="" disabled selected>選択してください</option>
+                <option>リモート</option>
+                <option>出社</option>
+                <option>どちらも可</option>
+              </select>
+            </div>
+            <div class="col-4">
+              <label class="req">雇用形態</label>
+              <select name="employment" required>
+                <option value="" disabled selected>選択してください</option>
+                <option>業務委託</option>
+                <option>正社員</option>
+                <option>どちらも可</option>
+              </select>
+            </div>
+            <div class="col-4">
+              <label class="req">希望稼働時間帯</label>
+              <input type="text" name="timeRange" required placeholder="09:00~18:00"
+                pattern="^([01]\d|2[0-3]):[0-5]\d~([01]\d|2[0-3]):[0-5]\d$" inputmode="numeric">
+              <small class="helper">例：09:30~17:30</small>
+            </div>
+
+            <div class="col-4">
+              <label class="req">希望月間稼働時間（h）</label>
+              <input type="number" name="monthlyHours" required min="1" step="1" placeholder="80" inputmode="numeric">
+            </div>
+            <div class="col-4">
+              <label class="req">希望月間稼働単価（円）</label>
+              <input type="number" name="monthlyUnit" required min="0" placeholder="2000" inputmode="numeric">
+            </div>
+            <div class="col-4" style="display:flex; align-items:end; gap:10px;">
+              <label style="font-weight:700; margin:0; display:flex; align-items:center; gap:10px;">
+                <input type="checkbox" name="acceptLower"> 希望単価以下のお仕事でも検討できる
+              </label>
+            </div>
+
+            <div class="col-12">
+              <label>希望職種（任意）</label>
+              <input type="text" name="desiredFree" placeholder="例：バックエンドエンジニア">
+            </div>
+          </div>
+        </div>
+
+        <!-- 経験・スキル：チップ入力 -->
+        <div class="section">
+          <h2>経験・スキル</h2>
+          <div class="grid">
+            <div class="col-12">
+              <label class="req">経験職種（Enterで追加 / 候補選択で追加）</label>
+              <div class="chip-wrap">
+                <input type="text" id="rolesInput" list="rolesList" placeholder="例：バックエンド" autocomplete="off">
+                <datalist id="rolesList"></datalist>
+                <div id="rolesChips" class="chipset" aria-live="polite"></div>
+                <small class="chip-note">追加済みは下のタグに表示。空欄でBackspaceで最後のタグ削除。</small>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <label class="req">経験業界（Enterで追加 / 候補選択で追加）</label>
+              <div class="chip-wrap">
+                <input type="text" id="industriesInput" list="industriesList" placeholder="例：IT" autocomplete="off">
+                <datalist id="industriesList"></datalist>
+                <div id="industriesChips" class="chipset" aria-live="polite"></div>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <label class="req">スキル（Enterで追加 / 候補選択で追加）</label>
+              <div class="chip-wrap">
+                <input type="text" id="skillsInput" list="skillsList" placeholder="例：Python" autocomplete="off">
+                <datalist id="skillsList"></datalist>
+                <div id="skillsChips" class="chipset" aria-live="polite"></div>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <label>保有資格（任意）</label>
+              <input type="text" name="certsFree" placeholder="例：基本情報技術者, 普通自動車第一種運転免許">
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn-primary">送信</button>
+          <button type="reset" class="btn-ghost" onclick="resetChips()">リセット</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- クライアントサイドのサンクス画面 -->
+  <div id="thanksPage" class="container">
+    <div class="card">
+      <div class="big" aria-hidden="true">✅</div>
+      <h2>ご入力ありがとうございました</h2>
+      <p>送信内容を受け付けました。</p>
+      <p>ご入力いただいた情報を元にお仕事をご紹介させていただきます。</p>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // === 受け取り用（辞書＋alias→canonical マップ） ===
+    let aliasMaps = { rolls:{}, industries:{}, skills:{} };
+
+    function normKey(s){
+      if(!s) return '';
+      s = String(s).trim()
+        .replace(/[\uFF01-\uFF5E]/g, ch => String.fromCharCode(ch.charCodeAt(0)-0xFEE0))
+        .replace(/\u3000/g,' ');
+      return s.toLowerCase();
+    }
+    function toCanonical(token, category){
+      const map = aliasMaps[category] || {};
+      const key = normKey(token);
+      return map[key] || token.trim();
+    }
+
+    function fillDatalist(id, items) {
+      const el = document.getElementById(id);
+      el.innerHTML = '';
+      const seen = new Set();
+      (items || []).forEach(v => {
+        const t = String(v).trim(); if (!t || seen.has(t)) return;
+        seen.add(t);
+        const opt = document.createElement('option'); opt.value = t;
+        el.appendChild(opt);
+      });
+    }
+
+    // Chip 共通
+    function addChip(containerId, value){
+      const cont = document.getElementById(containerId);
+      const set = cont._set || (cont._set = new Set());
+      const val = String(value).trim();
+      if(!val || set.has(val)) return;
+      set.add(val);
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.dataset.value = val;
+      chip.innerHTML = `<span>${val}</span><button type="button" aria-label="削除">×</button>`;
+      chip.querySelector('button').addEventListener('click', () => {
+        set.delete(val);
+        chip.remove();
+      });
+      cont.appendChild(chip);
+    }
+    function chipsToCsv(containerId){
+      const cont = document.getElementById(containerId);
+      return [...cont.querySelectorAll('.chip')].map(c => c.dataset.value).join(', ');
+    }
+    function resetChips(){
+      ['rolesChips','industriesChips','skillsChips'].forEach(id => {
+        const cont = document.getElementById(id);
+        if(cont){ cont.innerHTML = ''; cont._set = new Set(); }
+      });
+    }
+    function setupChipInput(inputId, listId, containerId, category){
+      const input = document.getElementById(inputId);
+      const container = document.getElementById(containerId);
+      input.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter'){
+          e.preventDefault();
+          const tok = input.value.trim();
+          if(!tok) return;
+          addChip(containerId, toCanonical(tok, category));
+          input.value = '';
+        } else if (e.key === 'Backspace' && input.value === '') {
+          const chips = container.querySelectorAll('.chip');
+          if(chips.length){
+            const last = chips[chips.length-1];
+            container._set && container._set.delete(last.dataset.value);
+            last.remove();
+          }
+        }
+      });
+      input.addEventListener('change', () => {
+        const tok = input.value.trim();
+        if(!tok) return;
+        addChip(containerId, toCanonical(tok, category));
+        input.value = '';
+      });
+    }
+
+    // DOB（スマホはテキスト→自動フォーマット）
+    (function setupDob() {
+      const txt = document.getElementById('dobText');
+      if (!txt) return;
+      txt.addEventListener('input', () => {
+        let v = txt.value.replace(/[^\d]/g, '').slice(0, 8);
+        if (v.length >= 5) v = v.slice(0,4) + '-' + v.slice(4);
+        if (v.length >= 8) v = v.slice(0,7) + '-' + v.slice(7);
+        txt.value = v;
+      });
+    })();
+
+    // 初期化：辞書読み込み、URL状態→サンクス表示、戻るリンク
+    (function init() {
+      google.script.run
+        .withSuccessHandler(function(dic) {
+          aliasMaps = dic.maps || aliasMaps;
+          fillDatalist('rolesList',      dic.rolls || []);
+          fillDatalist('industriesList', dic.industries || []);
+          fillDatalist('skillsList',     dic.skills || []);
+          setupChipInput('rolesInput', 'rolesList', 'rolesChips', 'rolls');
+          setupChipInput('industriesInput', 'industriesList', 'industriesChips', 'industries');
+          setupChipInput('skillsInput', 'skillsList', 'skillsChips', 'skills');
+        })
+        .withFailureHandler(showError)
+        .getDictionaries();
+
+      // GAS推奨APIで現在のURLを取得し、page=thanksならサンクス表示
+      if (google && google.script && google.script.url) {
+        google.script.url.getLocation(function(loc){
+          if ((loc.parameter && loc.parameter.page === 'thanks') || (loc.hash === 'thanks')) {
+            showThanks();
+          }
+        });
+      } else {
+        // フォールバック
+        const params = new URLSearchParams(location.search);
+        if (params.get('page') === 'thanks' || location.hash === '#thanks') showThanks();
+      }
+
+      document.getElementById('backToForm').addEventListener('click', function(e){
+        e.preventDefault();
+        hideThanks();
+        // URLを page=index に置換
+        if (google && google.script && google.script.history) {
+          google.script.history.replace(null, null, 'page=index');
+        } else {
+          history.replaceState(null, '', '?page=index');
+        }
+      });
+    })();
+
+    // 送信 → サンクス（履歴APIでURL更新、即時にサンクス表示）
+    function handleSubmit(e) {
+      e.preventDefault();
+      const form = e.target;
+
+      ['rolesInput','industriesInput','skillsInput'].forEach((id, idx) => {
+        const input = document.getElementById(id);
+        if(!input) return;
+        const cat = idx===0 ? 'rolls' : idx===1 ? 'industries' : 'skills';
+        const tok = input.value.trim();
+        if(tok){ addChip(idx===0?'rolesChips':idx===1?'industriesChips':'skillsChips', toCanonical(tok, cat)); input.value=''; }
+      });
+
+      const dobText = document.getElementById('dobText');
+      const dobDate = document.getElementById('dobDate');
+      let dob = (getComputedStyle(dobText).display !== 'none' && dobText.value.trim()) ? dobText.value.trim() : dobDate.value.trim();
+
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(dob)) return showError('生年月日は YYYY-MM-DD 形式で入力してください（例: 1990-04-01）');
+      const [y,m,d] = dob.split('-').map(n => parseInt(n,10));
+      const dt = new Date(y, m-1, d);
+      if (dt.getFullYear() !== y || dt.getMonth() !== m-1 || dt.getDate() !== d || y < 1900 || y > 2100) {
+        return showError('生年月日の値が不正です（存在する日付を入力してください）');
+      }
+
+      const data = {
+        name: form.name.value.trim(),
+        dob,
+        email: form.email.value.trim(),
+        tel: form.tel.value.trim(),
+        workstyle: form.workstyle.value,
+        employment: form.employment.value,
+        timeRange: form.timeRange.value.trim(),
+        monthlyHours: form.monthlyHours.value,
+        monthlyUnit: form.monthlyUnit.value,
+        acceptLower: form.acceptLower.checked,
+        desiredFree: form.desiredFree.value.trim(),
+        expRoles:      chipsToCsv('rolesChips'),
+        expIndustries: chipsToCsv('industriesChips'),
+        skills:        chipsToCsv('skillsChips'),
+        certsFree: form.certsFree.value.trim(),
+      };
+
+      const timeOk = /^([01]\d|2[0-3]):[0-5]\d~([01]\d|2[0-3]):[0-5]\d$/.test(data.timeRange);
+      if (!timeOk) return showError('希望稼働時間帯は hh:mm~hh:mm の形式で入力してください（例: 09:00~18:00）');
+      if(!data.expRoles)      return showError('「経験職種」を1件以上追加してください');
+      if(!data.expIndustries) return showError('「経験業界」を1件以上追加してください');
+      if(!data.skills)        return showError('「スキル」を1件以上追加してください');
+
+      google.script.run
+        .withSuccessHandler(function () {
+          // 1) URL を push/replace（推奨API）
+          if (google && google.script && google.script.history) {
+            google.script.history.replace(null, null, 'page=thanks');
+          } else {
+            // フォールバック
+            const base = location.href.split('#')[0].split('?')[0];
+            history.replaceState(null, '', base + '?page=thanks#thanks');
+          }
+          // 2) 画面は即時サンクスへ（白画面を出さない）
+          showThanks();
+        })
+        .withFailureHandler(function (err) {
+          showError(err && err.message ? err.message : '送信に失敗しました');
+        })
+        .submitForm(data);
+    }
+
+    // サンクス画面制御
+    function showThanks(){
+      document.getElementById('mainPage').style.display = 'none';
+      document.getElementById('thanksPage').style.display = 'block';
+      // ハッシュも付けておく（ブクマ/再読み込み時の保険）
+      try { if (location.hash !== '#thanks') location.hash = 'thanks'; } catch(e){}
+    }
+    function hideThanks(){
+      document.getElementById('thanksPage').style.display = 'none';
+      document.getElementById('mainPage').style.display = 'block';
+      try { if (location.hash === '#thanks') history.replaceState(null, '', location.href.replace(/#thanks$/, '')); } catch(e){}
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2600);
+    }
+    function showError(msg) { showToast('エラー: ' + msg); }
+  </script>
+</body>
+</html>
